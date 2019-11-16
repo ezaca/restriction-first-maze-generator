@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>The Cubic Game - Sample of Restriction First Generation Algorithm</title>
+
+    <style type="text/css">
+        
+        *{
+            box-sizing: border-box;
+        }
+
+        html{
+            --width: 480px;
+            --height: 480px;
+            --cell-width: 48px;
+            --cell-height: 48px;
+        }
+
+        html,body{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            user-select: none;
+            cursor: default;
+        }
+
+        body{
+            color: #111;
+            background-color: #fcfcfc;
+            display: flex;
+            align-items: flex-start;
+            align-content: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: 16px;
+        }
+
+        body > *{
+            width: 100%;
+            text-align: center;
+            margin: 0;
+        }
+
+        h1{font-size:3rem; font-weight: normal; padding: 10px 0;text-transform: uppercase;}
+        h2{font-size:2.7rem; font-weight: normal; padding: 10px 0;}
+
+        body.unthemed #title:before{
+            content: "The Cubic Maze";
+        }
+
+        body.unthemed #subtitle:before{
+            content: "A restriction-first approach."
+        }
+
+        .stage{
+            margin: auto;
+            position: relative;
+            width: 100%;
+            height: 534px;
+            min-width: 534px;
+            overflow: hidden;
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;
+            justify-items: center;
+            flex-grow: 2;
+        }
+
+        .floor{
+            /*border: rgba(255, 196, 0, .5) solid 10px;*/
+            /*box-shadow: rgba(255,196,0, .5) 0 0 0px 10px;*/
+            background-color: transparent;
+            position: absolute;
+            width: var(--width);
+            height: var(--height);
+            transition-property: transform, filter, opacity;
+            transition-duration: .1s;
+            border: black solid 12px;
+            box-sizing: content-box;
+        }
+
+        .floor > .line {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: stretch;
+            align-content: stretch;
+            justify-content: flex-start;
+            height: var(--cell-height);
+        }
+
+        .floor > .line > .cell{
+            height: var(--cell-height);
+            width: var(--cell-width);
+            border: black solid 2px;
+            border-top: none;
+            border-left: none;
+            position: relative;
+            background-color: rgba(30,30,30,0.95);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 100%;
+        }
+
+        .floor > .line:last-child > .cell{ border-bottom: none; }
+        .floor > .line > .cell:last-child{ border-right: none; }
+
+        .floor > .line > .stair-up::before,
+        .floor > .line > .stair-down::before{
+            content: "";
+            position: absolute;
+            background-size: 100%;
+            top: 0; left: 0; right: 0; bottom: 0;
+        }
+        .unthemed .floor > .line > .stair-up::before,
+        .unthemed .floor > .line > .stair-down::before{
+            filter: invert(1);
+        }
+
+        .floor > .line > .cell.open { background-color:  rgba(255,255,255,0.95); }
+        .floor > .line > .cell.open-n { border-top: none; }
+        .floor > .line > .cell.open-e { border-right: none; }
+        .floor > .line > .cell.open-s { border-bottom: none; }
+        .floor > .line > .cell.open-w { border-left: none; }
+        .floor > .line > .stair-up-n:before { background-image: url("img/stair-up-n.png"); ); }
+        .floor > .line > .stair-up-e:before { background-image: url("img/stair-up-e.png"); ); }
+        .floor > .line > .stair-up-s:before { background-image: url("img/stair-up-s.png"); ); }
+        .floor > .line > .stair-up-w:before { background-image: url("img/stair-up-w.png"); ); }
+        .floor > .line > .stair-down-n:before { background-image: url("img/stair-down-n.png"); ); }
+        .floor > .line > .stair-down-e:before { background-image: url("img/stair-down-e.png"); ); }
+        .floor > .line > .stair-down-s:before { background-image: url("img/stair-down-s.png"); ); }
+        .floor > .line > .stair-down-w:before { background-image: url("img/stair-down-w.png"); ); }
+
+        .left2{ transform: translateX(-380px) scale(0.8); z-index: 0; filter: blur(10px); opacity: .25; }
+        .left1{ transform: translate3d(-200px, 0, -10px) scale(0.9); z-index: 1; filter: blur(2px); opacity: .5; }
+        .center{ z-index: 2; filter: blur(0px); opacity: 1; }
+        .right1{ transform: translateX(200px) scale(0.9); z-index: 1; filter: blur(2px); opacity: .5; }
+        .right2{ transform: translateX(380px) scale(0.8); z-index: 0; filter: blur(10px); opacity: .25; }
+        .leftn{ transform: translateX(-840px) scale(0); filter: blur(30px); opacity: .25; }
+        .rightn{ transform: translateX(840px) scale(0); filter: blur(30px); opacity: .25; }
+
+        body.unthemed .player:after{
+            position: absolute;
+            content: "";
+            background: black;
+            border-radius: 50%;
+            top: 10px; bottom: 10px; left: 10px; right: 10px;
+        }
+
+        body.unthemed .enemy:not(.defeated):after{
+            position: absolute;
+            content: "";
+            background: red;
+            border-radius: 50%;
+            top: 10px; bottom: 10px; left: 10px; right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="title"></h1>
+    <h2 id="subtitle"></h2>
+    <div id="stage" class="stage"></div>
+
+<script type="text/javascript" src="game/direction-enum.js"></script>
+<script type="text/javascript" src="game/utils.js"></script>
+<script type="text/javascript" src="game/dom.js"></script>
+<script type="text/javascript" src="game/gui.js"></script>
+<script type="text/javascript" src="game/grids.js"></script>
+<script type="text/javascript" src="game/player.js"></script>
+<script type="text/javascript" src="game/restriction-first-stair.js"></script>
+<script type="text/javascript" src="game/generator-dijkstra-like.js"></script>
+<script type="text/javascript">
+    
+    if (location.hash.substr(1))
+    {
+        DOM.create(document.head, `link[rel="stylesheet"][type="text/css"][href="themes/${location.hash.substr(1).replace(/[\n\r"\\]/g,'')}.css"]`);
+        document.body.classList.add('themed');
+    } else
+        document.body.classList.add('unthemed');
+
+</script>
+<script type="text/javascript">
+    let floorCount = 5;
+    let mazeSize = 15;
+    GUI.init();
+    GUI.createFloors(floorCount);
+    GUI.createGrids(mazeSize,mazeSize);
+    Grids.reset(floorCount);
+    // Grids.eachFloor(floor => RestrictionFirstStair.generate(floor));
+    RestrictionFirstStair.generateAll([1,5+1]);
+    Grids.eachFloor(floor => GeneratorDijkstraLike.generate(floor));
+    var playerPos = Grids.currentFloor.randomCell();
+    GUI.setPlayerPosition({floor:playerPos.z, x:playerPos.x, y:playerPos.y});
+
+    window.onkeydown=function(ev){
+        switch(ev.code)
+        {
+            case 'Backspace':
+                ev.preventDefault();
+                history.back();
+                return;
+            case 'KeyW':
+            case 'ArrowUp':
+                ev.preventDefault();
+                return Player.moveNorth();
+            case 'KeyD':
+            case 'ArrowRight':
+                ev.preventDefault();
+                return Player.moveEast();
+            case 'KeyS':
+            case 'ArrowDown':
+                ev.preventDefault();
+                return Player.moveSouth();
+            case 'KeyA':
+            case 'ArrowLeft':
+                ev.preventDefault();
+                return Player.moveWest();
+            default: console.log('Key:',ev.code);
+        }
+    }
+</script>
+
+</body>
+</html>

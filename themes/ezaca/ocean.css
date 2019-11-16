@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css?family=Fredericka+the+Great&display=swap');
+
+body{
+    font-family: 'Fredericka the Great', sans-serif;
+    background-color: #143F59;
+    background-image: url("underwater-802092_1280.jpg");
+    background-size: cover;
+    color: #fcfcfc;
+}
+
+#title:before{ content: "The Cubic Deeps"; }
+#subtitle:before{ content: "“Abandon all hope ye who enter here...”"; }
+
+.enemy:after,
+.player:after{
+    position: absolute;
+    background: black;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    content: "";
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.player:after{
+    background-size: 90% !important;
+    background-image: url("octopus-146667.svg") !important;
+}
+.enemy:not(.defeated):after{
+    background-image: url("pirate-ship-2028574.svg") !important;
+    background-size: 100% !important;
+}
+.enemy.defeated:after{
+    background-image: url("wreck-145638.svg") !important;
+    background-size: 80% !important;
+}
+
+.floor{
+    background-color: transparent;
+    border: rgba(255,196,0,0.9) solid 12px;
+}
+
+.floor > .line > .cell{
+    background-color: rgba(255,255,255,0.95);
+    border: white solid 1px;
+}
+
+.floor > .line > .cell.open { background-color:  rgba(2,56,89,0.95); }
